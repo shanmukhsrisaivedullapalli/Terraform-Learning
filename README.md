@@ -29,3 +29,7 @@ There are two types of comments in Terraform:
 2. `Resources:` Define infrastructure objects (VPCs, EC2 instances, local files).
 3. `Variables:` Input values to make configurations reusable.
 4. `Outputs:` Values returned after infrastructure deployment.
+5. `Data Sources:` Query and fetch information about existing infrastructure outside of Terraform or defined elsewhere.
+6. `Locals:` Define temporary local named values/expressions to reduce repetition and simplify configurations.
+7. `Modules:` Package and reuse multiple related resources together as a single reusable component.
+8. `Terraform Settings / Backend:` Configure Terraform's core behavior, required version/providers, and where the state file is stored.
