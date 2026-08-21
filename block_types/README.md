@@ -36,9 +36,26 @@ provider "aws" {
 ## 3. `resource` block
 Defines an infrastructure object to be provisioned and managed by Terraform.
 ```hcl
-resource "local_file" "example" {
-  filename = "${path.module}/output.txt"
-  content  = "Hello from Terraform!"
+resource "aws_instance" "tempserver" {
+    ami = var.ami_id
+    instance_type = var.instance_type
+    key_name = var.key_name
+    associate_public_ip_address = true
+    security_groups = [aws_security_group.tempserver_sg.name]
+    iam_instance_profile = var.iam_instance_profile
+    tags = {
+        Name = "${local.name_prefix}-instance"
+        Environment = local.common_tags.Environment
+        ManagedBy = local.common_tags.ManagedBy
+    }
+    user_data = <<-EOF
+                   #!/bin/bash
+                   sudo yum update -y
+                   sudo yum install -y httpd
+                   sudo systemctl start httpd
+                   sudo systemctl enable httpd
+                   echo "<h1>Welcome to '${local.name_prefix}-instance'</h1>" > /var/www/html/index.html
+                   EOF
 }
 ```
 
@@ -59,10 +76,10 @@ data "aws_ami" "latest_ubuntu" {
 ## 5. `variable` block
 Declares input variables to make configurations dynamic and reusable across environments.
 ```hcl
-variable "file_name" {
-  type        = string
-  default     = "sample.txt"
-  description = "The name of the file to create"
+variable "iam_instance_profile" {
+    description = "IAM instance profile for the EC2 instance"
+    type = string
+    default = "SSMInstanceRole"
 }
 ```
 
@@ -70,21 +87,20 @@ variable "file_name" {
 Defines temporary internal values and expressions. Unlike variables, local values cannot be overridden externally.
 ```hcl
 locals {
-  environment = "dev"
-  file_prefix = "app-${local.environment}"
-  common_tags = {
-    ManagedBy = "Terraform"
-    Env       = local.environment
-  }
+    name_prefix = "web-server"
+    common_tags = {
+        Environment = "dev"
+        ManagedBy   = "Terraform"
+    }
 }
 ```
 
 ## 7. `output` block
 Exposes values generated after applying infrastructure configurations (e.g., resource IDs, file paths, IP addresses).
 ```hcl
-output "created_file_path" {
-  value       = local_file.example.filename
-  description = "Absolute path of the generated local file"
+output "instance_public_ip" {
+    description = "Public IP address of the EC2 instance"
+    value = aws_instance.tempserver.public_ip
 }
 ```
 
