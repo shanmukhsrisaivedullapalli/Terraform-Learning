@@ -91,10 +91,9 @@ resource "aws_security_group" "tempserver_sg" {
     }
 }
 
-resource "aws_instance" "tempserver" {
-    ami = var.ami_id
-    instance_type = var.instance_type
-    key_name = var.key_name
+module "tempserver" {
+    source = "./modules/web_server"
+    server_name = "${local.name_prefix}-instance"
     associate_public_ip_address = true
     security_groups = [aws_security_group.tempserver_sg.name]
     iam_instance_profile = var.iam_instance_profile
@@ -109,21 +108,19 @@ resource "aws_instance" "tempserver" {
                    sudo yum install -y httpd
                    sudo systemctl start httpd
                    sudo systemctl enable httpd
-                   echo "<h1>Welcome to '${local.name_prefix}-instance'</h1>" > /var/www/html/index.html
+                   echo "<h1>Welcome to '${local.name_prefix}-instance'</h1>" | sudo tee /var/www/html/index.html
                    EOF
+    user_data_replace_on_change = true
 }
 
 output "instance_name" {
-    description = "Name of the EC2 instance"
-    value = aws_instance.tempserver.tags["Name"]
+    value = module.tempserver.instance_name
 }
 
 output "instance_public_ip" {
-    description = "Public IP address of the EC2 instance"
-    value = aws_instance.tempserver.public_ip
+    value = module.tempserver.public_ip
 }
 
 output "instance_public_dns" {
-    description = "Public DNS of the EC2 instance"
-    value = "http://${aws_instance.tempserver.public_dns}"
+    value = module.tempserver.public_dns
 }
