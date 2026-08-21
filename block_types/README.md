@@ -1,4 +1,4 @@
-# Terraform Block Types
+# Block Types
 In terraform, **blocks** are the primary structural elements written in HashiCorp Configuration Language (HCL). They act as containers that define infrastructure, configure providers, manage data flow, and orgainze code.
 
 ---
